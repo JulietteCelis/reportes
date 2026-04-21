@@ -12,7 +12,7 @@ public class UbicacionClient {
 
     public UbicacionClient(RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://localhost:8082") // URL del microservicio de ubicaciones
+                .baseUrl("http://localhost:8083")
                 .build();
     }
 

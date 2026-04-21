@@ -6,23 +6,23 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import com.estadisticas.reportes.Dto.IncidenciaDto;
+import com.estadisticas.reportes.Dto.HistorialEstadoDto;
 
 @Component
-public class IncidenciasClient {
+public class HistorialClient {
 
     private final RestClient restClient;
 
-    public IncidenciasClient(RestClient.Builder builder) {
+    public HistorialClient(RestClient.Builder builder) {
         this.restClient = builder
                 .baseUrl("http://localhost:8080")
                 .build();
     }
 
-    public List<IncidenciaDto> obtenerIncidencias() {
+    public List<HistorialEstadoDto> obtenerHistorial() {
         return restClient.get()
-                .uri("/api/incidencias")
+                .uri("/api/historial-estados")
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<IncidenciaDto>>() {});
+                .body(new ParameterizedTypeReference<List<HistorialEstadoDto>>() {});
     }
 }
