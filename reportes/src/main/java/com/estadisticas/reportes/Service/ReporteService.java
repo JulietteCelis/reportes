@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.estadisticas.reportes.Dto.IncidenciaDto;
 import com.estadisticas.reportes.Dto.ReporteGeneralDto;
 import com.estadisticas.reportes.Dto.UbicacionResponseDto;
+import com.estadisticas.reportes.client.GestionInstitucionalClient;
 import com.estadisticas.reportes.client.IncidenciasClient;
 import com.estadisticas.reportes.client.UbicacionClient;
 
@@ -19,6 +20,7 @@ public class ReporteService {
 
     private final IncidenciasClient incidenciasClient;
     private final UbicacionClient ubicacionClient;
+    private final GestionInstitucionalClient gestionInstitucionalClient;
 
     public List<ReporteGeneralDto> obtenerZonasConMasBaches() {
         List<IncidenciaDto> incidencias = incidenciasClient.obtenerIncidencias();
@@ -40,9 +42,22 @@ public class ReporteService {
 
     private ReporteGeneralDto construirReporteGeneral(IncidenciaDto incidencia) {
         UbicacionResponseDto ubicacion = null;
+        ReporteGeneralDto personal = null;
 
         if (incidencia.getUbicacionId() != null) {
-            ubicacion = ubicacionClient.obtenerUbicacionPorId(incidencia.getUbicacionId());
+            try {
+                ubicacion = ubicacionClient.obtenerUbicacionPorId(incidencia.getUbicacionId());
+            } catch (Exception e) {
+                ubicacion = null;
+            }
+        }
+
+        if (incidencia.getPersonalId() != null) {
+            try {
+                personal = gestionInstitucionalClient.obtenerPersonalPorId(incidencia.getPersonalId());
+            } catch (Exception e) {
+                personal = null;
+            }
         }
 
         ReporteGeneralDto dto = new ReporteGeneralDto();
@@ -64,10 +79,24 @@ public class ReporteService {
             dto.setLatitud(ubicacion.getLatitud());
             dto.setLongitud(ubicacion.getLongitud());
             dto.setDireccion(ubicacion.getDireccion());
-            dto.setColonia(ubicacion.getColonia());
+            dto.setColonia(
+                    ubicacion.getColonia() != null && !ubicacion.getColonia().isBlank()
+                            ? ubicacion.getColonia()
+                            : "No disponible");
             dto.setCiudad(ubicacion.getCiudad());
         } else {
             dto.setColonia("No disponible");
+        }
+
+        if (personal != null) {
+            dto.setPersonalNombre(personal.getPersonalNombre());
+            dto.setPersonalEmail(personal.getPersonalEmail());
+            dto.setPersonalTelefono(personal.getPersonalTelefono());
+            dto.setPersonalDisponible(personal.getPersonalDisponible());
+
+            dto.setPuestoNombre(personal.getPuestoNombre());
+            dto.setCuadrillaNombre(personal.getCuadrillaNombre());
+            dto.setDepartamentoNombre(personal.getDepartamentoNombre());
         }
 
         return dto;
