@@ -1,5 +1,6 @@
 package com.estadisticas.reportes.client;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -10,9 +11,10 @@ public class UbicacionClient {
 
     private final RestClient restClient;
 
-    public UbicacionClient(RestClient.Builder builder) {
+    public UbicacionClient(
+            @Qualifier("loadBalancedRestClientBuilder") RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://localhost:8083")
+                .baseUrl("http://UBICACION")
                 .build();
     }
 

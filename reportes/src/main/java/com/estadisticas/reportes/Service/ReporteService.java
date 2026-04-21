@@ -32,11 +32,12 @@ public class ReporteService {
         List<IncidenciaDto> incidencias = incidenciasClient.obtenerIncidencias();
 
         Map<String, Long> conteoPorColonia = incidencias.stream()
-                .filter(i -> i.getTipoIncidenciaId() != null && i.getTipoIncidenciaId().equals(1L))
+                .filter(Objects::nonNull)
                 .map(i -> ubicacionClient.obtenerUbicacionPorId(i.getUbicacionId()))
                 .filter(Objects::nonNull)
-                .map(UbicacionResponseDto::getColonia)
-                .filter(Objects::nonNull)
+                .map(ubicacion -> ubicacion.getColonia() != null && !ubicacion.getColonia().isBlank()
+                        ? ubicacion.getColonia()
+                        : "No disponible")
                 .collect(Collectors.groupingBy(colonia -> colonia, Collectors.counting()));
 
         return conteoPorColonia.entrySet().stream()
@@ -49,10 +50,12 @@ public class ReporteService {
         List<IncidenciaDto> incidencias = incidenciasClient.obtenerIncidencias();
 
         Map<String, Long> conteoPorColonia = incidencias.stream()
+                .filter(Objects::nonNull)
                 .map(i -> ubicacionClient.obtenerUbicacionPorId(i.getUbicacionId()))
                 .filter(Objects::nonNull)
-                .map(UbicacionResponseDto::getColonia)
-                .filter(Objects::nonNull)
+                .map(ubicacion -> ubicacion.getColonia() != null && !ubicacion.getColonia().isBlank()
+                        ? ubicacion.getColonia()
+                        : "No disponible")
                 .collect(Collectors.groupingBy(colonia -> colonia, Collectors.counting()));
 
         return conteoPorColonia.entrySet().stream()
@@ -69,7 +72,9 @@ public class ReporteService {
                 .collect(Collectors.toMap(IncidenciaDto::getId, i -> i));
 
         List<Long> horas = historial.stream()
-                .filter(h -> "RESUELTO".equalsIgnoreCase(h.getEstado()) || "CERRADO".equalsIgnoreCase(h.getEstado()))
+                .filter(h -> "RESUELTA".equalsIgnoreCase(h.getEstado())
+                        || "RESUELTO".equalsIgnoreCase(h.getEstado())
+                        || "CERRADO".equalsIgnoreCase(h.getEstado()))
                 .map(h -> {
                     IncidenciaDto incidencia = incidenciasMap.get(h.getIncidenciaId());
 

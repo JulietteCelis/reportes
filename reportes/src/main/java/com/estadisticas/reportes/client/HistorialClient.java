@@ -2,6 +2,7 @@ package com.estadisticas.reportes.client;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -13,16 +14,18 @@ public class HistorialClient {
 
     private final RestClient restClient;
 
-    public HistorialClient(RestClient.Builder builder) {
+    public HistorialClient(
+            @Qualifier("loadBalancedRestClientBuilder") RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://localhost:8080")
+                .baseUrl("http://SERVICIOINCIDENCIAS")
                 .build();
     }
 
     public List<HistorialEstadoDto> obtenerHistorial() {
         return restClient.get()
-                .uri("/api/historial-estados")
+                .uri("/api/historial")
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<HistorialEstadoDto>>() {});
     }
-}
+    
+    }

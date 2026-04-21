@@ -2,6 +2,7 @@ package com.estadisticas.reportes.client;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -13,9 +14,10 @@ public class IncidenciasClient {
 
     private final RestClient restClient;
 
-    public IncidenciasClient(RestClient.Builder builder) {
+    public IncidenciasClient(
+            @Qualifier("loadBalancedRestClientBuilder") RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://localhost:8080")
+                .baseUrl("http://SERVICIOINCIDENCIAS")
                 .build();
     }
 
