@@ -1,20 +1,13 @@
 package com.estadisticas.reportes.Service;
 
-import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.estadisticas.reportes.Dto.HistorialEstadoDto;
 import com.estadisticas.reportes.Dto.IncidenciaDto;
-import com.estadisticas.reportes.Dto.IncidenciasPorColoniaDto;
-import com.estadisticas.reportes.Dto.TiempoPromedioResolucionDto;
+import com.estadisticas.reportes.Dto.ReporteGeneralDto;
 import com.estadisticas.reportes.Dto.UbicacionResponseDto;
-import com.estadisticas.reportes.Dto.ZonaBacheReporteDto;
-import com.estadisticas.reportes.client.HistorialClient;
 import com.estadisticas.reportes.client.IncidenciasClient;
 import com.estadisticas.reportes.client.UbicacionClient;
 
@@ -26,72 +19,57 @@ public class ReporteService {
 
     private final IncidenciasClient incidenciasClient;
     private final UbicacionClient ubicacionClient;
-    private final HistorialClient historialClient;
 
-    public List<ZonaBacheReporteDto> obtenerZonasConMasBaches() {
+    public List<ReporteGeneralDto> obtenerZonasConMasBaches() {
         List<IncidenciaDto> incidencias = incidenciasClient.obtenerIncidencias();
 
-        Map<String, Long> conteoPorColonia = incidencias.stream()
+        return incidencias.stream()
                 .filter(Objects::nonNull)
-                .map(i -> ubicacionClient.obtenerUbicacionPorId(i.getUbicacionId()))
-                .filter(Objects::nonNull)
-                .map(ubicacion -> ubicacion.getColonia() != null && !ubicacion.getColonia().isBlank()
-                        ? ubicacion.getColonia()
-                        : "No disponible")
-                .collect(Collectors.groupingBy(colonia -> colonia, Collectors.counting()));
-
-        return conteoPorColonia.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                .map(e -> new ZonaBacheReporteDto(e.getKey(), e.getValue()))
+                .map(this::construirReporteGeneral)
                 .toList();
     }
 
-    public List<IncidenciasPorColoniaDto> obtenerIncidenciasPorColonia() {
+    public List<ReporteGeneralDto> obtenerIncidenciasPorColonia() {
         List<IncidenciaDto> incidencias = incidenciasClient.obtenerIncidencias();
 
-        Map<String, Long> conteoPorColonia = incidencias.stream()
+        return incidencias.stream()
                 .filter(Objects::nonNull)
-                .map(i -> ubicacionClient.obtenerUbicacionPorId(i.getUbicacionId()))
-                .filter(Objects::nonNull)
-                .map(ubicacion -> ubicacion.getColonia() != null && !ubicacion.getColonia().isBlank()
-                        ? ubicacion.getColonia()
-                        : "No disponible")
-                .collect(Collectors.groupingBy(colonia -> colonia, Collectors.counting()));
-
-        return conteoPorColonia.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                .map(e -> new IncidenciasPorColoniaDto(e.getKey(), e.getValue()))
+                .map(this::construirReporteGeneral)
                 .toList();
     }
 
-    public TiempoPromedioResolucionDto obtenerTiempoPromedioResolucion() {
-        List<IncidenciaDto> incidencias = incidenciasClient.obtenerIncidencias();
-        List<HistorialEstadoDto> historial = historialClient.obtenerHistorial();
+    private ReporteGeneralDto construirReporteGeneral(IncidenciaDto incidencia) {
+        UbicacionResponseDto ubicacion = null;
 
-        Map<Long, IncidenciaDto> incidenciasMap = incidencias.stream()
-                .collect(Collectors.toMap(IncidenciaDto::getId, i -> i));
+        if (incidencia.getUbicacionId() != null) {
+            ubicacion = ubicacionClient.obtenerUbicacionPorId(incidencia.getUbicacionId());
+        }
 
-        List<Long> horas = historial.stream()
-                .filter(h -> "RESUELTA".equalsIgnoreCase(h.getEstado())
-                        || "RESUELTO".equalsIgnoreCase(h.getEstado())
-                        || "CERRADO".equalsIgnoreCase(h.getEstado()))
-                .map(h -> {
-                    IncidenciaDto incidencia = incidenciasMap.get(h.getIncidenciaId());
+        ReporteGeneralDto dto = new ReporteGeneralDto();
 
-                    if (incidencia == null || incidencia.getFechaReporte() == null || h.getFechaCambio() == null) {
-                        return null;
-                    }
+        dto.setIncidenciaId(incidencia.getId());
+        dto.setTitulo(incidencia.getTitulo());
+        dto.setDescripcion(incidencia.getDescripcion());
+        dto.setTipoIncidenciaId(incidencia.getTipoIncidenciaId());
+        dto.setEstado(incidencia.getEstado());
+        dto.setAlertaClima(incidencia.getAlertaClima());
+        dto.setFechaReporte(incidencia.getFechaReporte());
+        dto.setUsuarioId(incidencia.getUsuarioId());
 
-                    return Duration.between(incidencia.getFechaReporte(), h.getFechaCambio()).toHours();
-                })
-                .filter(Objects::nonNull)
-                .toList();
+        dto.setUbicacionId(incidencia.getUbicacionId());
+        dto.setDepartamentoId(incidencia.getDepartamentoId());
+        dto.setPersonalId(incidencia.getPersonalId());
 
-        double promedio = horas.stream()
-                .mapToLong(Long::longValue)
-                .average()
-                .orElse(0.0);
+        if (ubicacion != null) {
+            dto.setLatitud(ubicacion.getLatitud());
+            dto.setLongitud(ubicacion.getLongitud());
+            dto.setDireccion(ubicacion.getDireccion());
+            dto.setColonia(ubicacion.getColonia());
+            dto.setCiudad(ubicacion.getCiudad());
+        } else {
+            dto.setColonia("No disponible");
+        }
 
-        return new TiempoPromedioResolucionDto(promedio, (long) horas.size());
+        return dto;
     }
 }
