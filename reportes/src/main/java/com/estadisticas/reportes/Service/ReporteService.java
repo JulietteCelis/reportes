@@ -40,6 +40,15 @@ public class ReporteService {
                 .toList();
     }
 
+    public List<ReporteGeneralDto> obtenerReporteGeneral() {
+        List<IncidenciaDto> incidencias = incidenciasClient.obtenerIncidencias();
+
+        return incidencias.stream()
+                .filter(Objects::nonNull)
+                .map(this::construirReporteGeneral)
+                .toList();
+    }
+
     private ReporteGeneralDto construirReporteGeneral(IncidenciaDto incidencia) {
         UbicacionResponseDto ubicacion = null;
         ReporteGeneralDto personal = null;
@@ -79,24 +88,27 @@ public class ReporteService {
             dto.setLatitud(ubicacion.getLatitud());
             dto.setLongitud(ubicacion.getLongitud());
             dto.setDireccion(ubicacion.getDireccion());
-            dto.setColonia(
-                    ubicacion.getColonia() != null && !ubicacion.getColonia().isBlank()
-                            ? ubicacion.getColonia()
-                            : "No disponible");
+            dto.setColonia(ubicacion.getColonia());
             dto.setCiudad(ubicacion.getCiudad());
         } else {
             dto.setColonia("No disponible");
         }
 
         if (personal != null) {
+            dto.setDepartamentoNombre(personal.getDepartamentoNombre());
+            dto.setDepartamentoDescripcion(personal.getDepartamentoDescripcion());
+
+            dto.setCuadrillaId(personal.getCuadrillaId());
+            dto.setCuadrillaNombre(personal.getCuadrillaNombre());
+
+            dto.setPuestoId(personal.getPuestoId());
+            dto.setPuestoNombre(personal.getPuestoNombre());
+            dto.setPermisos(personal.getPermisos());
+
             dto.setPersonalNombre(personal.getPersonalNombre());
             dto.setPersonalEmail(personal.getPersonalEmail());
             dto.setPersonalTelefono(personal.getPersonalTelefono());
             dto.setPersonalDisponible(personal.getPersonalDisponible());
-
-            dto.setPuestoNombre(personal.getPuestoNombre());
-            dto.setCuadrillaNombre(personal.getCuadrillaNombre());
-            dto.setDepartamentoNombre(personal.getDepartamentoNombre());
         }
 
         return dto;

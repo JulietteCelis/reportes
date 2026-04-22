@@ -32,4 +32,9 @@ public class ReporteController {
     public List<ReporteGeneralDto> obtenerIncidenciasPorColonia() {
         return reporteService.obtenerIncidenciasPorColonia();
     }
+
+    @GetMapping("/todo")
+    public List<ReporteGeneralDto> obtenerReporteGeneral() {
+        return reporteService.obtenerReporteGeneral();
+    }
 }
